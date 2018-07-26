@@ -1,0 +1,415 @@
+% !TEX root = ejb-web.tex
+%!TEX encoding = UTF-8 Unicode
+\ifx\setbeamertemplate\undefined
+\documentclass[handout]{beamer}
+\fi
+\graphicspath{{../images/}}
+\usepackage{amsmath}
+\usepackage{xifthen}
+
+\usepackage{mathtools}
+\mathtoolsset{showonlyrefs}
+\usepackage{mathrsfs}
+
+\usepackage[multidot]{grffile}
+
+\usepackage{xspace}
+\usepackage{upgreek}
+\newcommand\xsb{$\upchi$SB\xspace}
+\newlength{\imagecolumnwidth}
+
+\usepackage[absolute,overlay]{textpos}
+
+\usepackage{slashed}
+\newcommand\dslash{\slashed{\partial}}
+
+\usepackage{bbold}
+\newcommand\one{\mathbb{1}}
+
+\usepackage{multirow}
+
+\newcommand\bs\boldsymbol
+
+\newcommand \Sx[1] {S_{\textnormal{#1}}}
+\newcommand \Sg[2] {\mathrm{#1}(#2)}
+\newcommand \SU[1] {\Sg{SU}{#1}}
+\newcommand \SO[1] {\Sg{SO}{#1}}
+\newcommand \Sp[1] {\Sg{Sp}{#1}}
+\newcommand \Uone {\Sg{U}{1}}
+
+\newcommand\pb{\overline{\psi}}
+\newcommand \bigL {\mathscr{L}}
+\newcommand \lag[1] {\bigL_{\mathrm{#1}}}
+
+\newcommand\sptn{Sp($2N$)\xspace}
+\newcommand\dee{\mathrm{d}}
+\newcommand\eee{\mathcal{E}}
+\newcommand\www{\mathcal{W}}
+\DeclareMathOperator\tr{tr}
+\DeclareMathOperator\real{Re}
+\newcommand\Nf{N_{\mathrm{f}}}
+
+%\usepackage{beamerthemesplit} %Activate for custom appearance
+\setbeamertemplate{navigation symbols}{}%remove navigation symbols
+
+\usefonttheme[onlymath]{serif}
+\usepackage{fontspec,xltxtra,xunicode}
+\defaultfontfeatures{Mapping=tex-text}
+\setsansfont[Scale=MatchLowercase,Mapping=tex-text]{Futura}
+\setbeamerfont{structure}{family=\fontspec{Cosmos BQ}}
+\definecolor{swanseablue}{RGB}{36,47,96}
+\setbeamercolor{structure}{fg=swanseablue}
+ \setbeamertemplate{itemize item}{•}
+ \setbeamertemplate{itemize subitem}{--}
+ \setbeamercolor{itemize item}{fg=black}
+ \setbeamercolor{itemize subitem}{fg=black}
+
+
+\newfontfamily{\J}[Scale=0.85]{Osaka}
+\newcommand\module[1][]{\texttt{module\ifthenelse{\equal{#1}{}}{}{ #1}}\xspace}
+
+\newcommand\disappear[1]{}
+\title{What even \emph{is} the \module command?}
+\author{{\large Ed Bennett}
+	\\{\small@QuantumofEd}
+	\\\vspace{16pt}
+	\hfill
+	\parbox{0.22\textwidth}{\centering\includegraphics[height=36pt]{logos/swansea}\\\small @SwanseaUni}
+	\parbox{0.44\textwidth}{\centering\includegraphics[height=24pt]{logos/scw}\\\small @SuperCompWales}
+	\parbox{0.22\textwidth}{\centering\includegraphics[height=36pt]{logos/sa2c}\\\small @sa2c\_swansea} }
+\date{SA2C Tech Chat, 2018-07-27}
+
+\newcommand\Wider[2][3em]{%
+\makebox[\linewidth][c]{%
+  \begin{minipage}{\dimexpr\paperwidth-#1\relax}
+  \raggedright#2
+  \end{minipage}%
+  }%
+}
+
+
+
+\newcommand\FrameText[1]{%
+  \begin{textblock*}{0.9\paperwidth}(3pt, 0.99\textheight)
+    \raggedright #1\hspace{.5em}
+  \end{textblock*}}
+
+\newcommand \sechead[1] {\frame{\vfill\Huge \centering\usebeamerfont{structure}\color{swanseablue}#1\vfill\null}}
+
+\usebackgroundtemplate%
+{%
+	\includegraphics[width=\paperwidth,height=\paperheight]{background/bg}%
+}
+\setbeamertemplate{footline}{
+	\vspace{1.0cm}
+}
+
+
+  
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}{\module basics}
+
+	\begin{itemize}[<+->]
+		\item HPC clusters provide a lot of software
+		\item Not all of it can be in the environment at once
+		\item Install each package in its own folder
+		\item Add to the \texttt{\$PATH} on request
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Using \module}
+
+	\begin{itemize}[<+->]
+		\item \module[avail]
+		\item \module[load]
+		\item \module[list]
+		\item \module[unload]
+		\item \module[purge]
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Promises}
+	``Modules can be loaded and unloaded dynamically and atomically, in an clean fashion.''\pause
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ echo $F90\end{verbatim}\pause\begin{verbatim}
+
+[s.e.j.bennett@cl2 ~]$ export F90=gfortran\end{verbatim}\pause\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ module load compiler/intel\end{verbatim}\pause\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ echo $F90\end{verbatim}\pause\begin{verbatim}
+ifort
+[s.e.j.bennett@cl2 ~]$ module unload compiler/intel\end{verbatim}\pause\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ echo $F90\end{verbatim}\pause\begin{verbatim}
+
+[s.e.j.bennett@cl2 ~]$
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}{Wait a minute!}
+
+	\begin{itemize}[<+->]
+		\item Executable scripts run in a subshell
+		\item They can't change the environment
+		\item To change the environment needs \texttt{source} or \texttt{.}, to run in the current shell
+		\item What even \emph{is} \module?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Is it an alias?}
+
+	\pause
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ which module\end{verbatim}\pause\begin{verbatim}
+/usr/bin/which: no module in (/usr/lib64/qt-3.3/bin:
+/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:
+/home/s.e.j.bennett/bin)
+\end{verbatim}
+
+	\pause
+	\begin{itemize}[<+->]
+		\item Nope
+		\item Where \emph{is} it!?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Aside}
+	
+	\begin{verbatim}		
+[s.e.j.bennett@cl2 ~]$ module avail | grep intel\end{verbatim}\pause\begin{verbatim}
+-------- /apps/modules/legacy --------
+hpcw  raven
+...
+\end{verbatim}
+
+	\begin{itemize}[<+->]
+		\item \module outputs \emph{everything} to \texttt{stderr}
+		\item Why?
+			
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Progress}
+	
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ cat /etc/profile.d/modules.sh\end{verbatim}\pause\begin{verbatim}
+shell=`/bin/basename \`/bin/ps -p $$ -ocomm=\``
+if [ -f /usr/share/Modules/init/$shell ]
+then
+. /usr/share/Modules/init/$shell
+else
+. /usr/share/Modules/init/sh
+fi\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]{Eureka}
+	
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ cat /usr/share/Modules/init/sh\end{verbatim}\pause\begin{verbatim}
+module() { eval `/usr/bin/modulecmd sh $*`; }
+
+MODULESHOME=/usr/share/Modules
+export MODULESHOME
+
+...
+\end{verbatim}
+
+	\begin{itemize}[<+->]
+		\item So \module is a \emph{function}
+		\item Now, how does it work?
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}{\texttt{modulecmd}}
+	\begin{itemize}[<+->]
+		\item 7392 lines of Tcl \uncover<4->{(https://git.io/fNEgB)}
+		\item ...
+		\item Let's look at a modulefile instead
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Finding some module files}
+	
+	\begin{verbatim}[s.e.j.bennett@cl2 ~]$ cat /etc/profile.d/02-default-modules.sh\end{verbatim}\pause\begin{verbatim}
+#!/bin/sh
+
+# Ansible managed
+
+module use /apps/modules/physics
+module use /apps/modules/medical
+module use /apps/modules/materials
+module use /apps/modules/genomics
+module use /apps/modules/financial
+...\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Module file directory structure}
+	
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ find /apps/modules/\end{verbatim}\pause\begin{verbatim}
+/apps/modules/
+/apps/modules/legacy
+/apps/modules/legacy/raven
+/apps/modules/legacy/hpcw
+/apps/modules/medical
+/apps/modules/materials
+/apps/modules/materials/fluidity
+/apps/modules/materials/OpenFOAM
+/apps/modules/materials/OpenFOAM/5.x-20180613
+/apps/modules/materials/QuantumEspresso
+/apps/modules/materials/QuantumEspresso/6.1
+...
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]{OK OK, show me a modulefile already!}
+	
+	\begin{verbatim}
+[s.e.j.bennett@cl2 ~]$ more /app/modules/materials/cp2k/2.4-intel-mpi\end{verbatim}\pause\begin{verbatim}
+#%Module1.0#####################################################################
+source /app/modules/system/logger.tcl
+##
+## CP2K modulefile
+##
+set appname "cp2k"
+set version "2.4"
+set para_ver "mpi"
+set type "popt"
+--More--
+\end{verbatim}
+
+	\begin{itemize}[<+->]
+		\item Modulefiles are Tcl programs
+		\item \verb|modulecmd| executes these, and does stuff with the result
+	\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{More of this cp2k modulefile}
+	
+	\begin{verbatim}
+proc ModulesHelp { } {
+  puts stderr "\tLoads PATH and LD_LIBRARY_PATH settings for cp2k.\n"
+  puts stderr "\tAn example jobscript and input file can be found in the cp2k_example.tar.gz file."
+  puts stderr "\tThis, along with a README file, is in the example directory in the cp2k application directory."
+  puts stderr "\tThe cp2k application directory can be found by loading the cp2k module and then"
+  puts stderr "\tlooking at the output of `which cp2k` and replacing 'bin/cp2k' with 'example'.\n"
+  puts stderr "\tMore information on this package can be found at http://www.cp2k.org\n"
+}
+--More--
+\end{verbatim}
+
+	\begin{itemize}[<+->]
+		\item Module help gets output to \texttt{stderr}
+		\item Why?
+		\item Let's keep going...
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Oh no...}
+	
+	\begin{verbatim}
+  # Set ulimit unlimited
+   if { [module-info shelltype sh] } {
+     puts "ulimit -s unlimited;"
+   } elseif { [module-info shelltype csh] } {
+     puts "limit stacksize unlimited;"
+   }
+--More--
+\end{verbatim}
+
+	\begin{itemize}[<+->]
+		\item Why are we \verb|puts|ing shell commands to \verb|stdout|?
+		\item Wait
+		\item Surely not
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{}{}
+	{\LARGE \begin{verbatim}
+module() { 
+    eval `/usr/bin/modulecmd sh $*`; 
+}
+\end{verbatim}
+
+}
+\end{frame}
+
+\begin{frame}{\texttt{eval} considered harmful (to sanity)}
+\begin{itemize}[<+->]
+	\item All actual work is done inside \texttt{modulecmd}
+	\item The output of which is passed straight to \texttt{eval}
+	\item Commands are run by outputting them to \texttt{stdout}
+	\item So messages can only be displayed via \texttt{stderr}
+	\item We can cross-check this in the \texttt{modulecmd} source...
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{modulecmd} revisited}
+\begin{verbatim}
+switch -- $::g_shellType {
+...
+{sh} {
+puts stdout "$var=[charEscaped $::env($var)];\
+export $var;"
+}
+...
+{tcl} {
+set val $::env($var)
+puts stdout "set ::env($var) {$val};"
+}
+{cmd} {
+set val $::env($var)
+puts stdout "set $var=$val"
+}	
+..
+\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Private modules}
+	\begin{itemize}[<+->]
+		\item Recall \verb|module use /apps/modules/physics|
+		\item Last argument is just a path
+		\item Paths are scanned for modulefile-like things
+		\item So we can add a path in \verb|$HOME|
+		\item This is built in via the \verb|use.own| module, which looks in \verb|$HOME/privatemodules|
+	\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Writing our own module}
+	\begin{verbatim}
+#%Module -*- tcl -*-
+## This is a module to access something
+proc ModulesHelp { } {
+  puts stderr "This module sets up access to something" 
+}
+module-whatis "sets up access to something"
+prereq something/else
+conflict that/other/module
+module load gcc
+setenv       SOMEVERION       0.95
+append-path  PATH             /home/[user]/[somedir]/bin
+append-path  MANPATH          /home/[user]/[somedir]/man
+append-path  LD_LIBRARY_PATH  /home/[user]/[somedir]/lib
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}{Thanks for listening!}
+	
+	\Wider[0em]{\includegraphics[width=\textwidth]{figs/swansea-panorama}}
+\end{frame}
+
+\end{document}
